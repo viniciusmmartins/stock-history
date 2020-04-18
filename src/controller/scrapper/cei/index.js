@@ -12,53 +12,52 @@ export default class CEIScrapperController extends ScrapperController {
      * 
      * @param {String} category 
      */
-    async getTransactions(user,password) {
-        consoleColorfy('Starting scrapper 😊...', 'green');
+    async getTransactions(user, password) {
+        consoleColorfy('Starting scrapper 😊...\n', 'green');
         const browser = await puppeteer.launch()
+        let err = null
+        //Creating page
+        const page = await browser.newPage()
+        consoleColorfy('Entering the page login page...', 'green');
         try {
-            //Creating page
-            const page = await browser.newPage()
             //Going to base URL
             await page.goto(CEI_BASE_URL)
             //Loging in
-            await this.login(page,user,password)
+            await this.login(page, user, password)
             //Go to Stocks page
             await page.goto(CEI_STOCKS_URL)
             //Querying stocks
             await this.queryStocks(page);
             //Getting queried stocks
             const response = await this.getStocks(page)
-            //After response, log-out
-            await this.logout(page)
             //Close browser
-            await browser.close()
-            consoleColorfy('Browser closed', 'red')
             consoleColorfy('Yuhulll, we did it!🥳', 'green')
             return response
         } catch (error) {
             console.error("Controller error => ", error);
+            page.screenshot({path: 'controller_error.png'})
+            err = error
+        } finally {
+            //After response, log-out
+            await this.logout(page)
             await browser.close()
             consoleColorfy('Browser closed', 'red')
-            throw { error: error.code || 500, message: 'Error retrieving stocks' }
-        } finally {
-
+            if (err) throw { error: err.code || 500, message: 'Error retrieving stocks' }
         }
     }
     /**
      * 
      * @param {puppeteer.Page} page 
      */
-    async login(page,user,password) {
-        consoleColorfy(`Credentials are { user: ${user} , password:${password}}...`,'blue')
-        consoleColorfy('Logging in...','blue')
+    async login(page, user, password) {
+        consoleColorfy(`Credentials are { user: ${user} , password:${password}}...`, 'cyan')
+        consoleColorfy('Logging in...', 'blue')
         await page.screenshot({ path: 'Login.png' })
         const fields = {
             user,
             password
         };
-        console.log(fields);
-        
-        
+
         await page.evaluate((fields) => {
             const inputs = document.getElementsByClassName('large-12')[0].querySelectorAll('.row:not(.collapse)')
             try {
@@ -69,21 +68,23 @@ export default class CEIScrapperController extends ScrapperController {
                 console.error(err);
             }
             return
-        },fields)
-        try{
+        }, fields)
+        try {
             await page.screenshot({ path: 'Credentials.png' })
-            consoleColorfy('Trying to loggin in...','blue')
+            consoleColorfy('Trying to loggin in...', 'blue')
             await page.click('input[type=submit]')
-            await page.waitForNavigation({timeout: 60000, waitUntil: 'networkidle0' }),
-            consoleColorfy('Logged in...','blue')
-            await page.screenshot({ path: 'Main-page.png' })
+            page.on('dialog', async dialog => {
+                await dialog.dismiss();
+                throw { message: dialog.message()}
+            });
+            await page.waitForNavigation({ waitUntil: 'networkidle0' }),
+            consoleColorfy('Logged in!!', 'green')
         }
-        catch(err){
-            console.error(err)
-            await page.screenshot({ path: 'Error.png' })
-            throw { code: 500, message: 'Error loggin in, it may be a problem with your credentials'}
+        catch (err) {
+            console.error("Login error", err)
+            throw { code: 500, message: err.message ||  'Error loggin in, it may be a problem with your credentials' }
         }
-     
+
         return true
     }
     /**
@@ -111,11 +112,11 @@ export default class CEIScrapperController extends ScrapperController {
             })
             await page.click('input[type=submit]')
             await page.waitFor('table');
-            consoleColorfy(`Query done! Table is visible`,'green')
+            consoleColorfy(`Query done! Table is visible`, 'green')
             return
         } catch (err) {
             console.error(err)
-            throw { error: 500, message: 'Querying failed'}
+            throw { error: 500, message: 'Querying failed' }
         }
 
     }
@@ -137,7 +138,7 @@ export default class CEIScrapperController extends ScrapperController {
             const theaders = document.querySelector('thead').getElementsByTagName('th')
             for (let index = 0; index < theaders.length; index++) {
                 let th = theaders[index];
-                table.thead.push(th.textContent.trim().replace(/\\n/ig,''))
+                table.thead.push(th.textContent.trim().replace(/\\n/ig, ''))
             }
             const rows = document.querySelector('tbody').getElementsByTagName('tr')
             for (let trIndex = 0; trIndex < rows.length; trIndex++) {
@@ -146,15 +147,15 @@ export default class CEIScrapperController extends ScrapperController {
                 for (let tdIndex = 0; tdIndex < rowElements.length; tdIndex++) {
                     row.push({
                         key: table.thead[tdIndex],
-                        value: rowElements[tdIndex].textContent.trim().replace(/\\n/ig,'')
+                        value: rowElements[tdIndex].textContent.trim().replace(/\\n/ig, '')
                     })
                 }
                 table.tbody.push(row)
             }
             return JSON.parse(JSON.stringify(table))
         })
-        consoleColorfy(`Stocks retrieved!`,'green')
-        await page.screenshot({ path: 'ativos.png',fullPage: true })
+        consoleColorfy(`Stocks retrieved!`, 'green')
+        await page.screenshot({ path: 'ativos.png', fullPage: true })
         return stocks
     }
 

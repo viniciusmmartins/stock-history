@@ -6,16 +6,16 @@ import { getNewsQuerySchema } from "./schemas";
 const router = Router()
 
 const initRouter = () =>{
-    router.route('/').get( getNews)
+    router.route('/').get(validator.query(getNewsQuerySchema), getNews)
 
     return router;
 }
 
 const getNews = async (req,res) =>{
     try{
-        const {category} = req.query
+       console.log(req.query)
         const scrapperController = new GloboScrapperController()
-        const response = await scrapperController.getNews(category)
+        const response = await scrapperController.getNews(req.query)
         res.status(200).json(response)
     }
     catch(err){

@@ -1,10 +1,12 @@
 import { Router } from "express";
 import CEIScrapperController from "../../../controller/scrapper/cei";
+import { validator } from "../../../config/validator";
+import {CEItransactionsSchema} from './schemas'
 
 const router = Router()
 
 const initRouter = () =>{
-    router.route('/').get( getTransactions)
+    router.route('/').post(validator.body(CEItransactionsSchema), getTransactions)
 
     return router;
 }
