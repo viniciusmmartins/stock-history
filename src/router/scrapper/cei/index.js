@@ -11,9 +11,9 @@ const initRouter = () =>{
 
 const getTransactions = async (req,res) =>{
     try{
-        const {category} = req.query
+        const {user,password} = req.body
         const scrapperController = new CEIScrapperController()
-        const response = await scrapperController.getTransactions(category)
+        const response = await scrapperController.getTransactions(user,password)
         res.status(200).json(response)
     }
     catch(err){
