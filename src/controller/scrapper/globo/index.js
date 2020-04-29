@@ -3,6 +3,7 @@ import ScrapperController from '..';
 import { consoleColorfy } from '../../../utils/colors';
 import { sleep } from '../../../utils/timers';
 import chalk from 'chalk';
+import * as fse from 'fs-extra';
 
 export default class GloboScrapperController extends ScrapperController {
     constructor() {
@@ -21,36 +22,91 @@ export default class GloboScrapperController extends ScrapperController {
             consoleColorfy('Browser open...')
             const page = await browser.newPage()
             await page.goto(url)
-            const news = await this.getDataFromMainPage(page, url)
+            let news = await this.getDataFromMainPage(page, url)
+            news = await this.getDataFromNewsPage(page,news)
+            // await this.generateFilesByNews(news)
             consolejColorfy('Closing browser...')
             return news
         } catch (error) {
             console.error("Controller error => ", JSON.parse(JSON.stringify(error)));
             err = error
-        }finally{
+        } finally {
             browser.close()
             consoleColorfy('Browser closed...\n')
             console.log(chalk.bgGreen.black('Have a nice one!🖖'))
-            if(err)throw { error: err.code || 500, message: 'Error retrieving news' }
+            if (err) throw { error: err.code || 500, message: 'Error retrieving news' }
         }
+    }
+    /**
+    * 
+    * @param {puppeteer.Page} page 
+    * @param {Array<Object>} news 
+    */
+    async getDataFromNewsPage(page, news) {
+        try{
+            for (let index = 0; index < array.length; index++) {
+                const element = array[index];
+                
+            }
+            const result = await news.map(async (n,index) => {
+                let href = n.title.href
+                consoleColorfy(`Getting article from news number ${index} `)
+                const article = await this.getContentFromPage(page,href)
+                news[index].resume = article
+            })
+            return result
+        }catch(err){
+            return news
+        }
+        
+    }
+    /**
+    * 
+    * @param {puppeteer.Page} page 
+    * @param {string} url 
+    */
+    async getContentFromPage(page,url) {
+        try{
+            consoleColorfy(`Entering page ${url}...`)
+
+            await page.goto(url)
+            return await page.evaluate(()=>{
+              const paragraphs =  document.querySelectorAll('article  p')
+              let article = ''
+              for (let index = 0; index < paragraphs.length; index++) {
+                  const p = paragraphs[index];
+                    article =+ p.textContent
+              }
+              return article
+            })
+        }catch(err){
+            console.error(err);
+            
+            return ''
+        }
+        
     }
     /**
      * 
      * @param {puppeteer.Page} page 
      */
-    async getDataFromMainPage(page, url, itemTargetCount = 500) {
+    async getDataFromMainPage(page, url, itemTargetCount = 10) {
         consoleColorfy(`Getting news from ${url}`, 'green')
         let items = [];
         try {
             while (items.length < itemTargetCount) {
                 items = await this.getItems(page)
                 consoleColorfy(`Number of news retrieved: ${items.length} of ${itemTargetCount}`)
-                try{
+                try {
+                    await page.waitFor('.pagination a')
+                    await page.waitFor(200)
                     await page.click('.pagination a')
                     await page.waitFor((itemsLength) => document.querySelectorAll('.widget--info__text-container').length > itemsLength, {}, items.length);
                 }
-                catch(err){
-                    consoleColorfy('End of news!','red')
+                catch (err) {
+                    console.error(err);
+
+                    consoleColorfy('End of news!', 'red')
                     break;
                 }
             }
@@ -62,61 +118,79 @@ export default class GloboScrapperController extends ScrapperController {
         }
     }
     /**
+  * 
+  * @param {Array<Object>} news 
+  */
+    async generateFilesByNews(news) {
+        await news.forEach(async (n, index) => {
+            fse.outputFileSync(`news/doc_${index}.txt`, n.title.text)
+            if (index % 10) console.log(`File number ${chalk.green(index)} out of ${chalk.red(news.length)} generated`)
+        })
+        return news
+    }
+    /**
    * 
    * @param {puppeteer.Page} page 
    */
     async getItems(page) {
-        return await page.evaluate(() => {
-            const list = document.querySelector('.results__list').querySelectorAll('li')
-            const items = []
-            for (let index = 0; index < list.length; index++) {
-                try {
-                    const info = list[index]
-                    let title = info.getElementsByClassName('widget--info__title')
-                    // let href = info.getElementsByTagName('a')[0].getAttribute('href')
-                    // let resume = info.getElementsByClassName('widget--info__description')
-                    let datetime = info.getElementsByClassName('widget--info__meta')
-                    let source = info.getElementsByClassName('widget--info__header')
-                    const news = {
-                        title: {
-                            text: title[0].textContent.trim().replace(/\\n/ig, ''),
-                            // href
-                        },
-                        // resume: resume[0].textContent.trim().replace(/\\n/ig, ''),
-                        metadata: {
-                            datetime: datetime[0].textContent.trim().replace(/\\n/ig, ''),
-                            source: source[0].textContent.trim().replace(/\\n/ig, '')
+        try {
+            return await page.evaluate(() => {
+                const list = document.querySelector('.results__list').querySelectorAll('li')
+                const items = []
+                for (let index = 0; index < list.length; index++) {
+                    try {
+                        const info = list[index]
+                        let title = info.getElementsByClassName('widget--info__title')
+                        let href = info.getElementsByTagName('a')[0].getAttribute('href')
+                        // let resume = info.getElementsByClassName('widget--info__description')
+                        let datetime = info.getElementsByClassName('widget--info__meta')
+                        let source = info.getElementsByClassName('widget--info__header')
+                        const news = {
+                            title: {
+                                text: title[0].textContent.trim().replace(/\\n/ig, ''),
+                                href
+                            },
+                            // resume: resume[0].textContent.trim().replace(/\\n/ig, ''),
+                            metadata: {
+                                datetime: datetime[0].textContent.trim().replace(/\\n/ig, ''),
+                                source: source[0].textContent.trim().replace(/\\n/ig, '')
+                            }
+                        }
+                        items.push(news);
+                    } catch (err) {
+                        const noResultElement = document.querySelector('.widget--no-results')
+                        if (noResultElement) {
+                            items.push({
+                                title: 'No itens were found for this search'
+                            });
                         }
                     }
-                    items.push(news);
-                } catch (err) {
-                    const noResultElement = document.querySelector('.widget--no-results')
-                    if(noResultElement){
-                        items.push({
-                            title: 'No itens were found for this search'
-                        });
-                    }
                 }
-            }
-            return JSON.parse(JSON.stringify(items));
-        })
+                return JSON.parse(JSON.stringify(items));
+            })
+        } catch (err) {
+            console.error("Get items error", err);
+            throw err
+        }
+
     }
     getURL(fields = {}) {
         let url = `https://g1.globo.com/busca/`
         const { search, order, from, to } = fields
         const date = new Date(from)
-        const formattedDate = date.toISOString().replace(/.[^.]*$/,'-0300')
+        const formattedDate = date.toISOString().replace(/.[^.]*$/, '-0300')
         try {
             url += '?'
             url += `q=${search || 'economia'}&`
             url += `order=${order || 'recent'}&`
             url += `species=notícias&`
             url += `from=${formattedDate || 'now-1w'}&`
-            if(to) url += `to=${to}&`
+            if (to) url += `to=${to}&`
         }
         catch{
             console.error(error);
         }
+        console.log(url)
         return url;
     }
 

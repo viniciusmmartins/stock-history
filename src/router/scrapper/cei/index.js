@@ -13,13 +13,15 @@ const initRouter = () =>{
 
 const getTransactions = async (req,res) =>{
     try{
-        const {user,password} = req.body
+        const {cached} = req.body
+        const {username, password } = req.user
         const scrapperController = new CEIScrapperController()
-        const response = await scrapperController.getTransactions(user,password)
+        const response = await scrapperController.getTransactions(username,password,cached)
         res.status(200).json(response)
     }
     catch(err){
         console.error("Router error => ",err)
+        
         res.status(err.code || 500).json({message: err.message || 'Internal server error'})
     }
 }

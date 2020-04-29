@@ -1,15 +1,23 @@
-process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0
 import chalk from 'chalk'
 import '@babel/polyfill'
 import express from 'express'
 import cors from 'cors'
 import bodyParser from 'body-parser'
+import morgan from 'morgan'
+import AuthenticatorMiddleware from './src/config/authenticator'
+import * as admin from 'firebase-admin'
 
 // --- Routers ---
 import {
     scrapper,
 } from './src/router'
-import morgan from 'morgan'
+
+
+const serviceCredentials = require('./src/credentials/stock-history-backend-firebase-adminsdk-dhuqv-dbd440c47a.json')
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceCredentials)
+})
 
 const app = express()
 app.use(cors())
@@ -19,10 +27,8 @@ app.use(bodyParser.json({ limit: '50mb' }))
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }))
 app.use(morgan(':user-agent :method :url :status :response-time ms'))
 
-
-
 const BASE_PATH = '/v1'
-
+app.use(AuthenticatorMiddleware)
 app.use(`${BASE_PATH}/scrapper/`, scrapper)
 
 app.use((err, req, res, next) => {
