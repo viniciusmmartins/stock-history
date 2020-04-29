@@ -22,7 +22,7 @@ admin.initializeApp({
 const app = express()
 app.use(cors())
 
-app.set('PORT', process.env.PORT || 3200)
+app.set('PORT', process.env.PORT || 8080)
 app.use(bodyParser.json({ limit: '50mb' }))
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }))
 app.use(morgan(':user-agent :method :url :status :response-time ms'))
