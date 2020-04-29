@@ -39,7 +39,7 @@ export default class CEIScrapperController extends ScrapperController {
     }
     async startScrapper(username, password) {
         consoleColorfy('Starting scrapper 😊...\n', 'green');
-        const browser = await puppeteer.launch()
+        const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
         let err = null
         let isLogged = false
         //Creating page

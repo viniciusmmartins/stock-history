@@ -15,7 +15,7 @@ export default class GloboScrapperController extends ScrapperController {
      */
     async getNews(fields) {
         consoleColorfy('Openning browser...\n', 'green');
-        const browser = await puppeteer.launch()
+        const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
         const url = this.getURL(fields)
         let err = null
         try {
