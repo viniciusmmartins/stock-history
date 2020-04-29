@@ -1,4 +1,4 @@
-{
+export const CREDENTIALS = {
   "type": "service_account",
   "project_id": "stock-history-backend",
   "private_key_id": "dbd440c47a6b872f836dbbdff6e37d98ae3bd588",

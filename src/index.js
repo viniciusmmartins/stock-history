@@ -4,16 +4,16 @@ import express from 'express'
 import cors from 'cors'
 import bodyParser from 'body-parser'
 import morgan from 'morgan'
-import AuthenticatorMiddleware from './src/config/authenticator'
+import AuthenticatorMiddleware from './config/authenticator'
 import * as admin from 'firebase-admin'
 
 // --- Routers ---
 import {
     scrapper,
-} from './src/router'
+} from './router'
 
 
-const serviceCredentials = require('./src/credentials/stock-history-backend-firebase-adminsdk-dhuqv-dbd440c47a.json')
+const serviceCredentials = require('./credentials').CREDENTIALS
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceCredentials)

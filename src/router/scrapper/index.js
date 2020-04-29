@@ -1,6 +1,5 @@
 import { Router } from "express";
 import globo from "./globo";
-import g1 from "./g1";
 import cei from "./cei";
 
 const router = Router()
@@ -9,7 +8,6 @@ const initRouter = () => {
     router.get('',getHelper)
     router.use('/cei', cei)
     router.use('/globo', globo)
-    router.use('/g1', g1)
 
     return router;
 }

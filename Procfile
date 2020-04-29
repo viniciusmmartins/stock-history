@@ -1,1 +1,1 @@
-web: npx babel-node index.js
+web: npm run start
