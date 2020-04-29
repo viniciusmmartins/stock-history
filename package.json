@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon --ext js --exec  babel-node src/index.js",
     "build": "babel src -d dist",
-   "start": "npm run build && node dist/index.js"
+    "start": "npm run build && node dist/index.js",
+    "serve": "node dist/index.js"
   },
   "author": "",
   "license": "ISC",
