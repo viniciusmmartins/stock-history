@@ -18,15 +18,16 @@ export default class GloboScrapperController extends ScrapperController {
         const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
         const url = this.getURL(fields)
         let err = null
+        let news = []
         try {
             consoleColorfy('Browser open...')
             const page = await browser.newPage()
             await page.goto(url)
-            let news = await this.getDataFromMainPage(page, url)
+            news = await this.getDataFromMainPage(page, url)
             news = await this.getDataFromNewsPage(page,news)
             // await this.generateFilesByNews(news)
-            consolejColorfy('Closing browser...')
-            return news
+            consoleColorfy('Closing browser...')
+            
         } catch (error) {
             console.error("Controller error => ", JSON.parse(JSON.stringify(error)));
             err = error
@@ -36,6 +37,7 @@ export default class GloboScrapperController extends ScrapperController {
             console.log(chalk.bgGreen.black('Have a nice one!🖖'))
             if (err) throw { error: err.code || 500, message: 'Error retrieving news' }
         }
+        return news
     }
     /**
     * 
@@ -44,18 +46,18 @@ export default class GloboScrapperController extends ScrapperController {
     */
     async getDataFromNewsPage(page, news) {
         try{
-            for (let index = 0; index < array.length; index++) {
-                const element = array[index];
-                
-            }
-            const result = await news.map(async (n,index) => {
+            for (let index = 0; index < news.length; index++) {
+                const n = news[index];
                 let href = n.title.href
                 consoleColorfy(`Getting article from news number ${index} `)
                 const article = await this.getContentFromPage(page,href)
                 news[index].resume = article
-            })
-            return result
+            }
+            console.log('News',news)
+            return news
         }catch(err){
+            console.error(err);
+            
             return news
         }
         
@@ -74,8 +76,10 @@ export default class GloboScrapperController extends ScrapperController {
               const paragraphs =  document.querySelectorAll('article  p')
               let article = ''
               for (let index = 0; index < paragraphs.length; index++) {
+
                   const p = paragraphs[index];
-                    article =+ p.textContent
+                  const txt = p.textContent
+                    article = article + p.textContent
               }
               return article
             })
@@ -148,9 +152,8 @@ export default class GloboScrapperController extends ScrapperController {
                         const news = {
                             title: {
                                 text: title[0].textContent.trim().replace(/\\n/ig, ''),
-                                href
+                                href: href.replace('//','https://')
                             },
-                            // resume: resume[0].textContent.trim().replace(/\\n/ig, ''),
                             metadata: {
                                 datetime: datetime[0].textContent.trim().replace(/\\n/ig, ''),
                                 source: source[0].textContent.trim().replace(/\\n/ig, '')

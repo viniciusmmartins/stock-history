@@ -74,7 +74,9 @@ var GloboScrapperController = /*#__PURE__*/function (_ScrapperController) {
               case 0:
                 (0, _colors.consoleColorfy)('Openning browser...\n', 'green');
                 _context.next = 3;
-                return _puppeteer["default"].launch();
+                return _puppeteer["default"].launch({
+                  args: ['--no-sandbox']
+                });
 
               case 3:
                 browser = _context.sent;

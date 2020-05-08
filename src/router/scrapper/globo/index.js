@@ -16,6 +16,7 @@ const getNews = async (req,res) =>{
        console.log(req.query)
         const scrapperController = new GloboScrapperController()
         const response = await scrapperController.getNews(req.query)
+        console.log(response)
         res.status(200).json(response)
     }
     catch(err){
