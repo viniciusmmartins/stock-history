@@ -44,7 +44,14 @@ export default class DividendsController extends ScrapperController {
                                     }
                                 }
                                 if(word.type == 'date'){
+                                   
                                     field = this.formatDate(word,value)
+                                    if(word.key == 'date_ex'){
+                                        dividend = {
+                                            ...dividend,
+                                            date_com: moment(field[word.key]).subtract(1,'day')
+                                        }
+                                    }
                                 }
                                 dividend = {
                                     ...dividend,
