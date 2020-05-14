@@ -53,7 +53,6 @@ export default class GloboScrapperController extends ScrapperController {
                 const article = await this.getContentFromPage(page,href)
                 news[index].resume = article
             }
-            console.log('News',news)
             return news
         }catch(err){
             console.error(err);

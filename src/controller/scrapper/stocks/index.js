@@ -31,5 +31,24 @@ export class StocksController{
             return null;
         }
         
-    }   
+    } 
+    async getMultipleStockPrices(stocksCode){
+        try{
+            if(stocksCode && Array.isArray(stocksCode)){
+                let stocks = []
+                for (let index = 0; index < stocksCode.length; index++) {
+                    const code = stocksCode[index];
+                     stocks.push(await this.getStockPrice(code))
+                }
+                return stocks
+            }else{
+                throw { code: 400}
+            }
+        }catch(err){
+            console.error(err);
+            
+            throw {code: err.code || 500}
+        }
+       
+    }  
 }
