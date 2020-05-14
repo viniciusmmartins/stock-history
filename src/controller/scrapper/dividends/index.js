@@ -3,6 +3,9 @@ import * as cheerio from 'cheerio';
 import * as fetch from 'node-fetch'
 import { DIVIDENDS_CALENDAR_URL,DIVIDENDS_DICTIONARY,months} from "../../../config/dividends";
 import moment from "moment";
+import { getDividendsTemplate } from "../../../templates/emails";
+import { EmailController } from "../../email";
+moment.locale('pt-br')
 export default class DividendsController extends ScrapperController {
     constructor() {
         super()
@@ -49,7 +52,7 @@ export default class DividendsController extends ScrapperController {
                                     if(word.key == 'date_ex'){
                                         dividend = {
                                             ...dividend,
-                                            date_com: moment(field[word.key]).subtract(1,'day')
+                                            date_com: moment(field[word.key]).subtract(1,'day').toISOString()
                                         }
                                     }
                                 }
@@ -113,5 +116,25 @@ export default class DividendsController extends ScrapperController {
             }
         }
         return field
+    }
+    async notifyNewDividends(to){
+        try{
+            const emailController = new EmailController()
+            const dividends = await this.searchForDividends()
+            const dividendsToNotify = dividends.filter((dividend)=>{
+                return new Date(dividend.date_com).getTime() >= Date.now()
+            }).map((dividend)=> {
+                return {
+                    ...dividend,
+                    date_com: moment(dividend.date_com).format('L')
+                }
+            })
+            const emailTemplate = await getDividendsTemplate(dividendsToNotify)
+            const { subject, body} = emailTemplate
+            return await emailController.send(to,subject,null,body)
+        }catch(err){
+            console.log("Notify new dividends =>",err)
+            throw {code: err.code || 500}
+        }
     }
 }

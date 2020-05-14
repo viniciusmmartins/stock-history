@@ -11,6 +11,7 @@ import * as admin from 'firebase-admin'
 import {
     scrapper,
 } from './router'
+import notify from './router/notify'
 
 
 const serviceCredentials = require('./credentials').CREDENTIALS

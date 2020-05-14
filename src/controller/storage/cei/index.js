@@ -7,14 +7,16 @@ export class CEIStorageController {
     /**
      * 
      * @param {String} username 
+     * @param {String} password 
      * @param {{field:String,direction: 'asc' | 'desc'}} sort 
      * @param {number} limit 
      */
-    async getStocks(username, sort,limit = 10) {
+    async getStocks(username,password, sort,limit = 10) {
         const userSnapshot = await this.firestore.collection('users').where('username', '==', username).get()
         if (userSnapshot.empty) throw new Error('User not found')
         else {
             const user = userSnapshot.docs[0]
+            if(user.password != password)  throw new Error('Wrong password')
             return await this.firestore.collection('stocks').where('user_id', '==', user.id).orderBy(sort.field, sort.direction).limit(limit).get()
         }
     }
