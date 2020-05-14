@@ -1,4 +1,4 @@
-const NoneSecureRoutes = ['/globo', '/g1','/dividends']
+const NoneSecureRoutes = ['/globo', '/g1','/dividends','stocks']
 export default async (req, res, next) => {
     if (NoneSecureRoutes.some(route => req.path.includes(route))) return next()
     let token = req.headers['authorization']

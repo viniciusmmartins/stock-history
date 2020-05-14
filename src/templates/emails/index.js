@@ -2,6 +2,7 @@ import moment from 'moment'
 import fs from 'fs'
 import path from 'path'
 import Handlebars from 'handlebars'
+import { StocksController } from '../../controller/scrapper/stocks'
 moment.locale('pt-br')
 export const getDividendsTemplate = async (dividends) => {
     let subject = `Dividendos da semana ${moment().format('L')}`

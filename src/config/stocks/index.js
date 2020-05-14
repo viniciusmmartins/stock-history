@@ -1,0 +1,1 @@
+export const STOCK_PRICE_URL = 'https://statusinvest.com.br/acoes'
